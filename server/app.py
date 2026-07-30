@@ -2,20 +2,25 @@
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from datetime import datetime
+import os
 
 from models import db, Workout, Exercise, WorkoutExercise
 from schemas import (workout_schema, workouts_schema,
     exercise_schema, exercises_schema,
-    workout_exercise_schema
+    workout_exercise_schema, ma, workout_exercises_schema
 )
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URI",
+    "sqlite:///app.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
+ma.init_app(app)
 migrate = Migrate(app, db)
 
+#WORKOUT ROUTES
 # Route to get all workouts
 @app.get("/workouts")
 def get_workouts():
@@ -36,8 +41,7 @@ def get_workout(id):
 def create_workout():
     data = request.get_json()
 
-    workout = Workout(name=data["name"],
-        date=datetime.strptime(data["date"], "%Y-%m-%d").date(),
+    workout = Workout(date=datetime.strptime(data["date"], "%Y-%m-%d").date(),
         duration_minutes=data["duration_minutes"],
         notes=data.get("notes"))
         
@@ -53,8 +57,6 @@ def update_workout(id):
         return jsonify({"error": "Workout not found"}), 404
 
     data = request.get_json()
-    if "name" in data:
-        workout.name = data["name"]
     if "duration_minutes" in data:
         workout.duration_minutes = data["duration_minutes"]
     if "notes" in data:
@@ -74,3 +76,136 @@ def delete_workout(id):
     db.session.delete(workout)
     db.session.commit()
     return jsonify({"message": "Workout deleted successfully"}), 200
+
+#EXERCISE ROUTES
+#Route to get all exercises
+@app.get("/exercises")
+def get_exercises():
+    exercises = Exercise.query.all()
+    return exercises_schema.dump(exercises), 200
+
+# Route to get one exercise
+@app.get("/exercises/<int:id>")
+def get_exercise(id):
+    exercise = Exercise.query.get(id)
+
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+    return exercise_schema.dump(exercise), 200
+
+# Route to create an exercise
+@app.post("/exercises")
+def create_exercise():
+    data = request.get_json()
+
+    exercise = Exercise(name=data["name"],
+        category=data["category"],
+        equipment_needed=data.get("equipment_needed", False)
+    )
+
+    db.session.add(exercise)
+    db.session.commit()
+    return exercise_schema.dump(exercise), 201
+
+# Route to update an existing exercise
+@app.patch("/exercises/<int:id>")
+def update_exercise(id):
+    exercise = Exercise.query.get(id)
+
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+    data = request.get_json()
+
+    if "name" in data:
+        exercise.name = data["name"]
+    if "category" in data:
+        exercise.category = data["category"]
+    if "equipment_needed" in data:
+        exercise.equipment_needed = data["equipment_needed"]
+
+    db.session.commit()
+    return exercise_schema.dump(exercise), 200
+
+# Route to delete an existing exercise
+@app.delete("/exercises/<int:id>")
+def delete_exercise(id):
+    exercise = Exercise.query.get(id)
+
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+
+    db.session.delete(exercise)
+    db.session.commit()
+    return jsonify({"message": "Exercise deleted successfully"}), 200
+
+# Route to get all workout exercises records
+@app.get("/workout-exercises")
+def get_workout_exercises():
+    workout_exercises = WorkoutExercise.query.all()
+    return workout_exercises_schema.dump(workout_exercises), 200
+
+# Route to get one workout exercises
+@app.get("/workout-exercises/<int:id>")
+def get_workout_exercise(id):
+    workout_exercise = WorkoutExercise.query.get(id)
+
+    if workout_exercise is None:
+        return jsonify({"error": "WorkoutExercise not found"}), 404
+
+    return workout_exercise_schema.dump(workout_exercise), 200
+
+# Route to create a workout
+@app.post("/workout-exercises")
+def create_workout_exercise():
+    data = request.get_json()
+
+    workout = Workout.query.get(data["workout_id"])
+    exercise = Exercise.query.get(data["exercise_id"])
+
+    if workout is None:
+        return jsonify({"error": "Workout not found"}), 404
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+
+    workout_exercise = WorkoutExercise(workout_id=data["workout_id"],
+        exercise_id=data["exercise_id"],
+        reps=data["reps"],
+        sets=data["sets"],
+        duration_seconds=data["duration_seconds"]
+    )
+
+    db.session.add(workout_exercise)
+    db.session.commit()
+    return workout_exercise_schema.dump(workout_exercise), 201
+
+# Route to update a workout
+@app.patch("/workout-exercises/<int:id>")
+def update_workout_exercise(id):
+    workout_exercise = WorkoutExercise.query.get(id)
+
+    if workout_exercise is None:
+        return jsonify({"error": "WorkoutExercise not found"}), 404
+
+    data = request.get_json()
+
+    if "sets" in data:
+        workout_exercise.sets = data["sets"]
+    if "reps" in data:
+        workout_exercise.reps = data["reps"]
+    if "duration_seconds" in data:
+        workout_exercise.duration_seconds = data["duration_seconds"]
+
+    db.session.commit()
+    return workout_exercise_schema.dump(workout_exercise), 200
+
+# route to delete a workout
+@app.delete("/workout-exercises/<int:id>")
+def delete_workout_exercise(id):
+    workout_exercise = WorkoutExercise.query.get(id)
+
+    if workout_exercise is None:
+        return jsonify({"error": "WorkoutExercise not found"}), 404
+
+    db.session.delete(workout_exercise)
+    db.session.commit()
+    return jsonify({"message": "WorkoutExercise deleted successfully"}), 200
