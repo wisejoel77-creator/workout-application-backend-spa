@@ -150,3 +150,47 @@ def get_workout_exercise(id):
         return jsonify({"error": "WorkoutExercise not found"}), 404
 
     return workout_exercise_schema.dump(workout_exercise), 200
+
+# Route to create a workout
+@app.post("/workout-exercises")
+def create_workout_exercise():
+    data = request.get_json()
+
+    workout = Workout.query.get(data["workout_id"])
+    exercise = Exercise.query.get(data["exercise_id"])
+
+    if workout is None:
+        return jsonify({"error": "Workout not found"}), 404
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+
+    workout_exercise = WorkoutExercise(workout_id=data["workout_id"],
+        exercise_id=data["exercise_id"],
+        reps=data["reps"],
+        sets=data["sets"],
+        duration_seconds=data["duration_seconds"]
+    )
+
+    db.session.add(workout_exercise)
+    db.session.commit()
+    return workout_exercise_schema.dump(workout_exercise), 201
+
+# Route to update a workout
+@app.patch("/workout-exercises/<int:id>")
+def update_workout_exercise(id):
+    workout_exercise = WorkoutExercise.query.get(id)
+
+    if workout_exercise is None:
+        return jsonify({"error": "WorkoutExercise not found"}), 404
+
+    data = request.get_json()
+
+    if "sets" in data:
+        workout_exercise.sets = data["sets"]
+    if "reps" in data:
+        workout_exercise.reps = data["reps"]
+    if "duration_seconds" in data:
+        workout_exercise.duration_seconds = data["duration_seconds"]
+
+    db.session.commit()
+    return workout_exercise_schema.dump(workout_exercise), 200
