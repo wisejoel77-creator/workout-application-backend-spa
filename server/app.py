@@ -194,3 +194,15 @@ def update_workout_exercise(id):
 
     db.session.commit()
     return workout_exercise_schema.dump(workout_exercise), 200
+
+# route to delete a workout
+@app.delete("/workout-exercises/<int:id>")
+def delete_workout_exercise(id):
+    workout_exercise = WorkoutExercise.query.get(id)
+
+    if workout_exercise is None:
+        return jsonify({"error": "WorkoutExercise not found"}), 404
+
+    db.session.delete(workout_exercise)
+    db.session.commit()
+    return jsonify({"message": "WorkoutExercise deleted successfully"}), 200
