@@ -29,3 +29,17 @@ def get_workout(id):
         return jsonify({"error": "Workout not found"}), 404
 
     return workout_schema.dump(workout), 200
+
+# Route to create a workout
+@app.post("/workouts")
+def create_workout():
+    data = request.get_json()
+
+    workout = Workout(name=data["name"],
+        date=data["date"], duration=data["duration"],
+        notes=data["notes"] )
+    
+
+    db.session.add(workout)
+    db.session.commit()
+    return workout_schema.dump(workout), 201
