@@ -90,5 +90,18 @@ def get_exercise(id):
 
     if exercise is None:
         return jsonify({"error": "Exercise not found"}), 404
-
     return exercise_schema.dump(exercise), 200
+
+# Route to create an exercise
+@app.post("/exercises")
+def create_exercise():
+    data = request.get_json()
+
+    exercise = Exercise(name=data["name"],
+        category=data["category"],
+        equipment_needed=data.get("equipment_needed", False)
+    )
+
+    db.session.add(exercise)
+    db.session.commit()
+    return exercise_schema.dump(exercise), 201
