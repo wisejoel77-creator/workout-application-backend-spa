@@ -124,3 +124,15 @@ def update_exercise(id):
 
     db.session.commit()
     return exercise_schema.dump(exercise), 200
+
+# Route to delete an existing exercise
+@app.delete("/exercises/<int:id>")
+def delete_exercise(id):
+    exercise = Exercise.query.get(id)
+
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+
+    db.session.delete(exercise)
+    db.session.commit()
+    return jsonify({"message": "Exercise deleted successfully"}), 200
