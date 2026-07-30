@@ -12,17 +12,16 @@ class Exercise(db.Model):
 
     workout_exercises = db.relationship("WorkoutExercise", back_populates="exercise", cascade="all, delete-orphan")
 # overlaps  tells SQLAlchemy that two relationships share some of the same columns so it shouldn't issue warnings about them.
-    workout = db.relationship("Workout",secondary="workout_exercises", back_populates="exercises", overlaps="workout_exercises,workout")
+    workouts = db.relationship("Workout",secondary="workout_exercises", back_populates="exercises", overlaps="workout_exercises,workout")
 
     @validates("name")
     def validate_name(self, key, value):
-        if len(value) < 3:
+        if not value or len(value.strip()) < 3:
             raise ValueError("Exercise name must be at least 3 characters.")
         return value
 
 # workout model
 class Workout(db.Model):
-
     __tablename__ = "workouts"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -39,9 +38,14 @@ class Workout(db.Model):
             raise ValueError("Workout duration must be greater than zero.")
         return value
 
+    @validates("duration_seconds")
+    def validate_duration_seconds(self, key, value):
+        if value < 0:
+            raise ValueError("Duration cannot be negative.")
+        return value
+
 # workout excercise model
 class WorkoutExercise(db.Model):
-
     __tablename__ = "workout_exercises"
 
     id = db.Column(db.Integer, primary_key=True)
