@@ -1,6 +1,7 @@
 #app.py imports
 from flask import Flask, request, jsonify
 from flask_migrate import Migrate
+from datetime import datetime
 
 from models import db, Workout, Exercise, WorkoutExercise
 from schemas import (workout_schema, workouts_schema,
@@ -36,10 +37,10 @@ def create_workout():
     data = request.get_json()
 
     workout = Workout(name=data["name"],
-        date=data["date"], duration=data["duration"],
-        notes=data["notes"] )
-    
-
+        date=datetime.strptime(data["date"], "%Y-%m-%d").date(),
+        duration_minutes=data["duration_minutes"],
+        notes=data.get("notes"))
+        
     db.session.add(workout)
     db.session.commit()
     return workout_schema.dump(workout), 201
@@ -54,6 +55,22 @@ def update_workout(id):
     data = request.get_json()
     if "name" in data:
         workout.name = data["name"]
+    if "duration_minutes" in data:
+        workout.duration_minutes = data["duration_minutes"]
+    if "notes" in data:
+        workout.notes = data["notes"]
 
     db.session.commit()
     return workout_schema.dump(workout), 200
+
+# route to delete a workout
+@app.delete("/workouts/<int:id>")
+def delete_workout(id):
+    workout = Workout.query.get(id)
+
+    if workout is None:
+        return jsonify({"error": "Workout not found"}), 404
+
+    db.session.delete(workout)
+    db.session.commit()
+    return jsonify({"message": "Workout deleted successfully"}), 200

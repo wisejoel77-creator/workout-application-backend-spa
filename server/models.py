@@ -38,12 +38,6 @@ class Workout(db.Model):
             raise ValueError("Workout duration must be greater than zero.")
         return value
 
-    @validates("duration_seconds")
-    def validate_duration_seconds(self, key, value):
-        if value < 0:
-            raise ValueError("Duration cannot be negative.")
-        return value
-
 # workout excercise model
 class WorkoutExercise(db.Model):
     __tablename__ = "workout_exercises"
@@ -69,4 +63,10 @@ class WorkoutExercise(db.Model):
     def validate_reps(self, key, value):
         if value is not None and value < 1:
             raise ValueError("Reps must be at least 1.")
+        return value
+
+    @validates("duration_seconds")
+    def validate_duration_seconds(self, key, value):
+        if value < 0:
+            raise ValueError("Duration cannot be negative.")
         return value
