@@ -14,3 +14,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# Route to get all workouts
+@app.get("/workouts")
+def get_workouts():
+    workouts = Workout.query.all()
+    return workouts_schema.dump(workouts), 200
