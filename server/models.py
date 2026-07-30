@@ -38,3 +38,31 @@ class Workout(db.Model):
         if value <= 0:
             raise ValueError("Workout duration must be greater than zero.")
         return value
+
+# workout excercise model
+class WorkoutExercise(db.Model):
+
+    __tablename__ = "workout_exercises"
+
+    id = db.Column(db.Integer, primary_key=True)
+    workout_id = db.Column( db.Integer,db.ForeignKey("workouts.id"),nullable=False)
+    exercise_id = db.Column(db.Integer,db.ForeignKey("exercises.id"),nullable=False)
+
+    reps = db.Column(db.Integer, nullable=False)
+    sets = db.Column(db.Integer, nullable=False)
+    duration_seconds = db.Column(db.Integer, nullable=False)
+
+    workout = db.relationship("Workout",back_populates="workout_exercises")
+    exercise = db.relationship("Exercise",back_populates="workout_exercises")
+
+    @validates("sets")
+    def validate_sets(self, key, value):
+        if value is not None and value < 1:
+            raise ValueError("Sets must be at least 1.")
+        return value
+
+    @validates("reps")
+    def validate_reps(self, key, value):
+        if value is not None and value < 1:
+            raise ValueError("Reps must be at least 1.")
+        return value
