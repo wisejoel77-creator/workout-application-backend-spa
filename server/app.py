@@ -6,7 +6,7 @@ from datetime import datetime
 from models import db, Workout, Exercise, WorkoutExercise
 from schemas import (workout_schema, workouts_schema,
     exercise_schema, exercises_schema,
-    workout_exercise_schema, ma
+    workout_exercise_schema, ma, workout_exercises_schema
 )
 
 app = Flask(__name__)
@@ -38,8 +38,7 @@ def get_workout(id):
 def create_workout():
     data = request.get_json()
 
-    workout = Workout(name=data["name"],
-        date=datetime.strptime(data["date"], "%Y-%m-%d").date(),
+    workout = Workout(date=datetime.strptime(data["date"], "%Y-%m-%d").date(),
         duration_minutes=data["duration_minutes"],
         notes=data.get("notes"))
         
@@ -55,8 +54,6 @@ def update_workout(id):
         return jsonify({"error": "Workout not found"}), 404
 
     data = request.get_json()
-    if "name" in data:
-        workout.name = data["name"]
     if "duration_minutes" in data:
         workout.duration_minutes = data["duration_minutes"]
     if "notes" in data:
@@ -137,3 +134,19 @@ def delete_exercise(id):
     db.session.delete(exercise)
     db.session.commit()
     return jsonify({"message": "Exercise deleted successfully"}), 200
+
+# Route to get all workout exercises records
+@app.get("/workout-exercises")
+def get_workout_exercises():
+    workout_exercises = WorkoutExercise.query.all()
+    return workout_exercises_schema.dump(workout_exercises), 200
+
+# Route to get one workout exercises
+@app.get("/workout-exercises/<int:id>")
+def get_workout_exercise(id):
+    workout_exercise = WorkoutExercise.query.get(id)
+
+    if workout_exercise is None:
+        return jsonify({"error": "WorkoutExercise not found"}), 404
+
+    return workout_exercise_schema.dump(workout_exercise), 200

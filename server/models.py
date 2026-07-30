@@ -50,8 +50,8 @@ class WorkoutExercise(db.Model):
     sets = db.Column(db.Integer, nullable=False)
     duration_seconds = db.Column(db.Integer, nullable=False)
 
-    workout = db.relationship("Workout",back_populates="workout_exercises")
-    exercise = db.relationship("Exercise",back_populates="workout_exercises")
+    workout = db.relationship("Workout",back_populates="workout_exercises", overlaps="exercises")
+    exercise = db.relationship("Exercise",back_populates="workout_exercises", overlaps="workouts")
 
     @validates("sets")
     def validate_sets(self, key, value):
