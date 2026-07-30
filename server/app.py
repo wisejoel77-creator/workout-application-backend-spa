@@ -20,3 +20,12 @@ migrate = Migrate(app, db)
 def get_workouts():
     workouts = Workout.query.all()
     return workouts_schema.dump(workouts), 200
+
+# Route to get a single workout 
+@app.get("/workouts/<int:id>")
+def get_workout(id):
+    workout = Workout.query.get(id)
+    if workout is None:
+        return jsonify({"error": "Workout not found"}), 404
+
+    return workout_schema.dump(workout), 200
