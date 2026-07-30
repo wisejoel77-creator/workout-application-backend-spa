@@ -16,6 +16,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
+#WORKOUT ROUTES
 # Route to get all workouts
 @app.get("/workouts")
 def get_workouts():
@@ -74,3 +75,10 @@ def delete_workout(id):
     db.session.delete(workout)
     db.session.commit()
     return jsonify({"message": "Workout deleted successfully"}), 200
+
+#EXERCISE ROUTES
+#Route to get all exercises
+@app.get("/exercises")
+def get_exercises():
+    exercises = Exercise.query.all()
+    return exercises_schema.dump(exercises), 200
