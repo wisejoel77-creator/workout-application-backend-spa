@@ -105,3 +105,22 @@ def create_exercise():
     db.session.add(exercise)
     db.session.commit()
     return exercise_schema.dump(exercise), 201
+
+# Route to update an existing exercise
+@app.patch("/exercises/<int:id>")
+def update_exercise(id):
+    exercise = Exercise.query.get(id)
+
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+    data = request.get_json()
+
+    if "name" in data:
+        exercise.name = data["name"]
+    if "category" in data:
+        exercise.category = data["category"]
+    if "equipment_needed" in data:
+        exercise.equipment_needed = data["equipment_needed"]
+
+    db.session.commit()
+    return exercise_schema.dump(exercise), 200
