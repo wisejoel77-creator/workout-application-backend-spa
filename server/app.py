@@ -43,3 +43,17 @@ def create_workout():
     db.session.add(workout)
     db.session.commit()
     return workout_schema.dump(workout), 201
+
+# Route to update a workout
+@app.patch("/workouts/<int:id>")
+def update_workout(id):
+    workout = Workout.query.get(id)
+    if workout is None:
+        return jsonify({"error": "Workout not found"}), 404
+
+    data = request.get_json()
+    if "name" in data:
+        workout.name = data["name"]
+
+    db.session.commit()
+    return workout_schema.dump(workout), 200
