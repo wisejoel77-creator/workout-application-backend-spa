@@ -82,3 +82,13 @@ def delete_workout(id):
 def get_exercises():
     exercises = Exercise.query.all()
     return exercises_schema.dump(exercises), 200
+
+# Route to get one exercise
+@app.get("/exercises/<int:id>")
+def get_exercise(id):
+    exercise = Exercise.query.get(id)
+
+    if exercise is None:
+        return jsonify({"error": "Exercise not found"}), 404
+
+    return exercise_schema.dump(exercise), 200
